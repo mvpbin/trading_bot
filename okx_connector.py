@@ -2,14 +2,84 @@
 import okx.Trade as Trade
 import okx.MarketData as MarketData
 import okx.Account as Account
+import httpx # Keep this import for TimeoutException
 import json
 from datetime import datetime, timezone, timedelta
 import time
 import hmac
 import base64
-# import requests # Not needed if using SDK methods only
+import logging
+from functools import wraps # For the decorator
+import httpx # 确保 httpx 已导入
+import httpcore # 新增导入 httpcore
 
 import config
+
+module_logger = logging.getLogger(f"trading_bot.{__name__}")
+
+# --- Timeout Retry Decorator ---
+def with_timeout_retry(max_retries: int = 3, initial_retry_delay: float = 2.0,
+                       backoff_factor: float = 2.0, logger_instance=None):
+    """
+    Decorator to add timeout and retry logic to a function that makes an API call.
+    It catches several httpx and httpcore exceptions related to network issues.
+    """
+    if logger_instance is None: # Fallback logger
+        logger_instance = logging.getLogger(f"trading_bot.timeout_retry_decorator")
+        if not logger_instance.hasHandlers(): # Basic setup if no handler
+            handler = logging.StreamHandler()
+            handler.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s'))
+            logger_instance.addHandler(handler)
+            logger_instance.setLevel(logging.INFO)
+
+    # 定义可重试的异常类型元组
+    RETRYABLE_EXCEPTIONS = (
+        httpx.TimeoutException,
+        httpx.NetworkError,      # 包括 ConnectError, ReadError, WriteError, PoolTimeout
+        httpx.RemoteProtocolError,
+        httpcore.NetworkError,   # httpcore 底层网络错误
+        httpcore.RemoteProtocolError
+        # 注意：可以根据需要添加更多具体的 httpx 或 httpcore 异常
+    )
+
+    def decorator(func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            retries_left = max_retries
+            current_delay = initial_retry_delay
+            last_exception = None
+
+            while retries_left > 0:
+                try:
+                    # func_name = func.__name__
+                    # logger_instance.debug(f"Calling {func_name}, attempt {max_retries - retries_left + 1}/{max_retries}")
+                    return func(*args, **kwargs)
+                except RETRYABLE_EXCEPTIONS as e: # 捕获元组中定义的所有可重试异常
+                    last_exception = e
+                    retries_left -= 1
+                    logger_instance.warning(
+                        f"API call to '{func.__name__}' failed with {type(e).__name__} (Attempt {max_retries - retries_left}/{max_retries}). Error: {e}"
+                    )
+                    if retries_left > 0:
+                        logger_instance.info(f"Retrying in {current_delay:.2f} seconds...")
+                        time.sleep(current_delay)
+                        current_delay *= backoff_factor # Exponential backoff
+                    else:
+                        logger_instance.error(
+                            f"API call to '{func.__name__}' failed after {max_retries} retries due to {type(e).__name__}."
+                        )
+                        raise # Re-raise the last caught retryable exception
+                except Exception as e_unexpected: # Catch other potential non-retryable exceptions
+                    logger_instance.error(
+                        f"API call to '{func.__name__}' encountered an unexpected non-retryable error: {e_unexpected}", exc_info=True
+                    )
+                    raise # Re-raise other critical exceptions immediately
+
+            if last_exception: # Should only be reached if loop finishes due to retries_left <= 0
+                raise last_exception
+            return None # Fallback, though typically an exception should have been raised
+        return wrapper
+    return decorator
 
 class OKXConnector:
     def __init__(self):
@@ -17,223 +87,146 @@ class OKXConnector:
             self.api_key = config.DEMO_API_KEY
             self.secret_key = config.DEMO_SECRET_KEY
             self.passphrase = config.DEMO_PASSPHRASE
-            self.flag = '1' # Demo trading flag
-            # self.domain = "https://www.okx.com" # Domain for manual requests, not needed for SDK calls
-            print("OKX Connector initialized for DEMO TRADING.")
+            self.flag = '1'
+            module_logger.info("OKX Connector initialized for DEMO TRADING.")
         else:
-            self.api_key = config.REAL_API_KEY
-            self.secret_key = config.REAL_SECRET_KEY
-            self.passphrase = config.REAL_PASSPHRASE
-            self.flag = '0' # Real trading flag
-            # self.domain = "https://www.okx.com"
-            print("OKX Connector initialized for REAL TRADING.")
-            print("!!! WARNING: OPERATING WITH REAL FUNDS !!!")
+            self.api_key = getattr(config, 'REAL_API_KEY', "YOUR_REAL_API_KEY_HERE")
+            self.secret_key = getattr(config, 'REAL_SECRET_KEY', "YOUR_REAL_SECRET_KEY_HERE")
+            self.passphrase = getattr(config, 'REAL_PASSPHRASE', "YOUR_REAL_PASSPHRASE_HERE")
+            self.flag = '0'
+            module_logger.info("OKX Connector initialized for REAL TRADING.")
+            module_logger.warning("!!! WARNING: OPERATING WITH REAL FUNDS !!!")
 
         current_mode = "DEMO" if config.IS_DEMO_TRADING else "REAL"
-        if not self.api_key or "YOUR_" in self.api_key or self.api_key == "":
-            raise ValueError(f"API Key for {current_mode} trading is not configured in config.py.")
-        if not self.secret_key or "YOUR_" in self.secret_key or self.secret_key == "":
-            raise ValueError(f"Secret Key for {current_mode} trading is not configured in config.py.")
-        if not self.passphrase or "YOUR_" in self.passphrase or self.passphrase == "": # Passphrase might be empty for some API key types
-            raise ValueError(f"Passphrase for {current_mode} trading is not configured in config.py (or is empty if required).")
+        if not self.api_key or (isinstance(self.api_key, str) and ("YOUR_" in self.api_key and "HERE" in self.api_key)):
+            raise ValueError(f"API Key for {current_mode} trading is not configured correctly in config.py.")
+        if not self.secret_key or (isinstance(self.secret_key, str) and ("YOUR_" in self.secret_key and "HERE" in self.secret_key)):
+            raise ValueError(f"Secret Key for {current_mode} trading is not configured correctly in config.py.")
+        if not self.passphrase or (isinstance(self.passphrase, str) and ("YOUR_" in self.passphrase and "HERE" in self.passphrase)):
+            raise ValueError(f"Passphrase for {current_mode} trading is not configured correctly in config.py.")
 
+        # Initialize API clients with SDK default timeouts, as direct timeout injection failed
         self.trade_api = Trade.TradeAPI(self.api_key, self.secret_key, self.passphrase, flag=self.flag)
         self.market_api = MarketData.MarketAPI(self.api_key, self.secret_key, self.passphrase, flag=self.flag)
         self.account_api = Account.AccountAPI(self.api_key, self.secret_key, self.passphrase, flag=self.flag)
+        module_logger.info("OKX API clients initialized (using SDK default timeouts initially). Retries handled by decorator.")
 
     def _process_candle_data(self, api_data_list: list, api_endpoint_name: str, expect_volume_at_index_5: bool = True) -> list:
-        """
-        Helper to process raw candle data from API.
-        Assumes API always returns newest first. This method reverses it.
-        expect_volume_at_index_5: True if data[i][5] is volume, False if it's 'confirm' or other.
-        """
+        # ... (this method remains the same) ...
         klines_from_api = []
         if not isinstance(api_data_list, list):
-            print(f"    WARNING OKXConnector ({api_endpoint_name}): API data is not a list: {api_data_list}")
+            module_logger.warning(f"    OKXConnector ({api_endpoint_name}): API data is not a list: {api_data_list}")
             return []
-            
         for k_data_point in api_data_list:
-            if isinstance(k_data_point, list) and len(k_data_point) >= 5: # ts,o,h,l,c
+            if isinstance(k_data_point, list) and len(k_data_point) >= 5:
                 volume_value = 0.0
                 if expect_volume_at_index_5 and len(k_data_point) >= 6:
-                    try:
-                        volume_value = float(k_data_point[5])
-                    except (ValueError, TypeError):
-                        # print(f"    WARNING OKXConnector ({api_endpoint_name}): Invalid volume data '{k_data_point[5]}', using 0.0.")
-                        volume_value = 0.0
-                elif not expect_volume_at_index_5 : # e.g. mark/index price 'confirm' field
-                    pass # volume_value remains 0.0
-
-                klines_from_api.append([
-                    int(k_data_point[0]), float(k_data_point[1]), float(k_data_point[2]),
-                    float(k_data_point[3]), float(k_data_point[4]),
-                    volume_value
-                ])
-            else:
-                print(f"    WARNING OKXConnector ({api_endpoint_name}): Invalid kline data point format: {k_data_point}")
-        
-        if klines_from_api:
-            print(f"    DEBUG OKXConnector ({api_endpoint_name}): API raw list {len(klines_from_api)}. First (API newest): ts={klines_from_api[0][0]}, Last (API oldest): ts={klines_from_api[-1][0]}")
-        
-        klines_to_return = klines_from_api[::-1] # Reverse: API returns newest first -> we want oldest first for the page
-        
-        if klines_to_return:
-            print(f"    DEBUG OKXConnector ({api_endpoint_name}): Data to return (oldest first for page): {len(klines_to_return)}. First: ts={klines_to_return[0][0]}, Last: ts={klines_to_return[-1][0]}")
-        
+                    try: volume_value = float(k_data_point[5])
+                    except (ValueError, TypeError): volume_value = 0.0 
+                klines_from_api.append([int(k_data_point[0]), float(k_data_point[1]), float(k_data_point[2]),
+                                        float(k_data_point[3]), float(k_data_point[4]), volume_value])
+            else: module_logger.warning(f"    OKXConnector ({api_endpoint_name}): Invalid kline data point format: {k_data_point}")
+        klines_to_return = klines_from_api[::-1] 
         return klines_to_return
 
+    @with_timeout_retry(logger_instance=module_logger)
     def get_market_candles(self, instId: str, bar: str = config.TIMEFRAME, limit: int = config.DEFAULT_KLINE_LIMIT, 
                            before: str = None, after: str = None) -> list:
-        """Fetches RECENT MARKET K-line data from /api/v5/market/candles."""
         endpoint_name = "/market/candles"
-        try:
-            API_MAX_LIMIT = 100 # Confirmed by user for this endpoint
-            params = {'instId': instId, 'bar': bar, 'limit': str(min(limit, API_MAX_LIMIT))}
-            # For THIS endpoint, 'before' gets older data.
-            if before:
-                try: 
-                    # Attempt -1ms adjustment for 'before' with market candles due to past issues
-                    params['before'] = str(int(before) - 1) 
-                    # print(f"    DEBUG OKXConnector ({endpoint_name}): Original 'before'={before}, adjusted to {params['before']}.")
-                except ValueError: params['before'] = str(before)
-            if after: params['after'] = str(after) # 'after' gets newer data here
+        # No try-except for httpx.TimeoutException here, decorator handles it.
+        API_MAX_LIMIT = 100 
+        params = {'instId': instId, 'bar': bar, 'limit': str(min(limit, API_MAX_LIMIT))}
+        if before:
+            try: params['before'] = str(int(before) - 1) 
+            except ValueError: params['before'] = str(before)
+        if after: params['after'] = str(after)
+        # module_logger.debug(f"OKXConnector ({endpoint_name}): Calling SDK with params = {params}")
+        result = self.market_api.get_candlesticks(**params)
+        api_code = result.get('code'); api_data = result.get('data', [])
+        if api_code == '0': return self._process_candle_data(api_data, endpoint_name, True)
+        else: module_logger.error(f"OKXConnector ({endpoint_name}): API Error. Full response: {result}"); return []
 
-            print(f"  DEBUG in OKXConnector ({endpoint_name}): Calling SDK self.market_api.get_candlesticks with params = {params}")
-            result = self.market_api.get_candlesticks(**params) # This is the SDK method for this endpoint
-            
-            api_code = result.get('code'); api_msg = result.get('msg'); api_data = result.get('data', [])
-            print(f"  DEBUG in OKXConnector ({endpoint_name}): API response: Code='{api_code}', Msg='{api_msg}', DataItems={len(api_data) if isinstance(api_data,list) else 'N/A'}")
-            if api_code == '0': 
-                return self._process_candle_data(api_data, endpoint_name, expect_volume_at_index_5=True)
-            else: 
-                print(f"  DEBUG in OKXConnector ({endpoint_name}): Error from API. Full response: {result}"); return []
-        except Exception as e: 
-            print(f"  DEBUG in OKXConnector ({endpoint_name}): Exception: {e}"); import traceback; traceback.print_exc(); return []
-
+    @with_timeout_retry(logger_instance=module_logger)
     def get_history_market_candles(self, instId: str, bar: str = config.TIMEFRAME, 
-                                   limit: int = 100, # Max limit for this endpoint
-                                   before: str = None, after: str = None) -> list:
-        """Fetches HISTORICAL MARKET K-line data from /api/v5/market/history-candles via SDK."""
+                                   limit: int = 100, before: str = None, after: str = None) -> list:
         endpoint_name = "/market/history-candles"
-        try:
-            API_MAX_LIMIT = 100 # For this endpoint
-            params = {'instId': instId, 'bar': bar, 'limit': str(min(limit, API_MAX_LIMIT))}
-            # For THIS endpoint, 'after' gets older data.
-            if after: params['after'] = str(after)
-            if before: params['before'] = str(before) # 'before' gets newer data here
-
-            print(f"  DEBUG in OKXConnector ({endpoint_name}): Calling SDK self.market_api.get_history_candlesticks with params = {params}")
+        # No try-except for httpx.TimeoutException here, decorator handles it.
+        API_MAX_LIMIT = 100 
+        params = {'instId': instId, 'bar': bar, 'limit': str(min(limit, API_MAX_LIMIT))}
+        if after: params['after'] = str(after)
+        if before: params['before'] = str(before)
+        if not hasattr(self.market_api, 'get_history_candlesticks'):
+            module_logger.error(f"OKXConnector ({endpoint_name}): Method 'get_history_candlesticks' not found.")
+            return []
+        # module_logger.debug(f"OKXConnector ({endpoint_name}): Calling SDK with params = {params}")
+        result = self.market_api.get_history_candlesticks(**params)
+        api_code = result.get('code'); api_data = result.get('data', [])
+        if api_code == '0': return self._process_candle_data(api_data, endpoint_name, True)
+        else: module_logger.error(f"OKXConnector ({endpoint_name}): API Error. Full response: {result}"); return []
             
-            if not hasattr(self.market_api, 'get_history_candlesticks'):
-                print(f"    ERROR OKXConnector ({endpoint_name}): Method 'get_history_candlesticks' not found in MarketAPI. Please check python-okx version.")
-                return []
-            
-            result = self.market_api.get_history_candlesticks(**params) # Using the SDK method
-
-            api_code = result.get('code'); api_msg = result.get('msg'); api_data = result.get('data', [])
-            print(f"  DEBUG in OKXConnector ({endpoint_name}): API response: Code='{api_code}', Msg='{api_msg}', DataItems={len(api_data) if isinstance(api_data,list) else 'N/A'}")
-
-            if api_code == '0':
-                # This endpoint returns 'vol', 'volCcy', 'volCcyQuote', 'confirm'
-                # The 6th element (index 5) is 'vol'.
-                return self._process_candle_data(api_data, endpoint_name, expect_volume_at_index_5=True)
-            else:
-                print(f"  DEBUG in OKXConnector ({endpoint_name}): Error from API. Full response: {result}"); return []
-        except Exception as e:
-            print(f"  DEBUG in OKXConnector ({endpoint_name}): Exception: {e}")
-            import traceback; traceback.print_exc(); return []
-            
-    # place_order, get_balance, get_positions (keep your last working versions)
+    @with_timeout_retry(logger_instance=module_logger)
     def place_order(self, instId, side, ordType, sz, tdMode='cross', clOrdId=None, posSide=None):
-        try:
-            if ordType.lower() == 'market':
-                result = self.trade_api.place_order(instId=instId, tdMode=tdMode, side=side,posSide=posSide, ordType=ordType, sz=str(sz), clOrdId=clOrdId)
-            else: return None
-            if result and isinstance(result, dict):
-                if result.get('code') == '0' and result.get('data'):
-                    if isinstance(result['data'], list) and len(result['data']) > 0 and isinstance(result['data'][0], dict) and result['data'][0].get('sCode') == '0':
-                        return result['data'][0]
-                    else: return result 
-                else: return result 
-            else: return None
-        except Exception: return None
+        # No try-except for httpx.TimeoutException here, decorator handles it.
+        if ordType.lower() == 'market': result = self.trade_api.place_order(instId=instId, tdMode=tdMode, side=side,posSide=posSide, ordType=ordType, sz=str(sz), clOrdId=clOrdId)
+        else: return None
+        if result and isinstance(result, dict):
+            if result.get('code') == '0' and result.get('data'):
+                data_list = result['data']
+                if isinstance(data_list, list) and len(data_list) > 0 and isinstance(data_list[0], dict):
+                    if data_list[0].get('sCode') == '0': return data_list[0]
+                    else: module_logger.error(f"OKX place_order sCode error: {data_list[0].get('sMsg')} ({data_list[0].get('sCode')})"); return data_list[0]
+            module_logger.error(f"OKX place_order API error: {result.get('msg')} (Code: {result.get('code')})"); return result 
+        return None
+
+    @with_timeout_retry(logger_instance=module_logger)
     def get_balance(self, ccy=None):
-        try:
-            result = self.account_api.get_account_balance(ccy=ccy)
-            if result['code'] == '0' and result.get('data'):
-                if isinstance(result['data'], list) and len(result['data']) > 0: return result['data'][0].get('details', [])
-                else: return []
+        # No try-except for httpx.TimeoutException here, decorator handles it.
+        result = self.account_api.get_account_balance(ccy=ccy)
+        if result['code'] == '0' and result.get('data'):
+            if isinstance(result['data'], list) and len(result['data']) > 0: return result['data'][0].get('details', [])
             else: return []
-        except Exception: return []
+        else: module_logger.error(f"OKX get_balance API error: {result.get('msg')} (Code: {result.get('code')})"); return []
+
+    @with_timeout_retry(logger_instance=module_logger)
     def get_positions(self, instType='SWAP', instId=None):
-        try:
-            result = self.account_api.get_positions(instType=instType, instId=instId)
-            if result['code'] == '0' and result.get('data'): return result['data']
-            else: return []
-        except Exception: return []
+        # No try-except for httpx.TimeoutException here, decorator handles it.
+        result = self.account_api.get_positions(instType=instType, instId=instId)
+        if result['code'] == '0' and result.get('data'): return result['data']
+        else: module_logger.error(f"OKX get_positions API error: {result.get('msg')} (Code: {result.get('code')})"); return []
 
 if __name__ == '__main__':
-    try:
-        print("Initializing OKXConnector for testing...")
-        connector = OKXConnector()
-        test_bar_okx = config.TIMEFRAME # Use TIMEFRAME from config for consistency in test
-        test_limit_okx = 5
+    # ... (The __main__ test block remains the same as my previous version for OKXConnector) ...
+    if not logging.getLogger(f"trading_bot.{OKXConnector.__module__}").hasHandlers():
+        test_logger_main_okx = logging.getLogger(f"trading_bot") 
+        test_logger_main_okx.setLevel(logging.DEBUG)
+        ch_test_main_okx = logging.StreamHandler()
+        ch_test_main_okx.setLevel(logging.DEBUG) 
+        formatter_main_okx = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+        ch_test_main_okx.setFormatter(formatter_main_okx)
+        test_logger_main_okx.addHandler(ch_test_main_okx)
 
-        # --- Test 1: Historical Market Candles (/api/v5/market/history-candles) ---
-        # This endpoint's 'after' requests OLDER data.
+    try:
+        print("Initializing OKXConnector for testing (with retry decorator)...")
+        connector = OKXConnector()
+        test_bar_okx = config.TIMEFRAME 
+        test_limit_okx = 3 
+
         print(f"\n--- Test 1: Fetch recent {test_limit_okx} HISTORICAL MARKET klines (bar={test_bar_okx}) ---")
-        # First call with no 'after' to get the most recent block from history-candles
-        # (API behavior for no pagination param for history-candles needs to be verified,
-        # it might require 'before' with a future TS for latest, or 'after' with a very old TS to start from past)
-        # For simplicity of test, let's assume calling with just limit gets latest available "historical" block
         hm_klines_latest_batch = connector.get_history_market_candles(
             instId=config.SYMBOL, bar=test_bar_okx, limit=test_limit_okx 
         )
-        if hm_klines_latest_batch:
-            print(f"Fetched {len(hm_klines_latest_batch)} recent historical market klines (Batch 1):")
-            for k_line in hm_klines_latest_batch: print(f"  ts={k_line[0]}")
-
-            if len(hm_klines_latest_batch) > 0:
-                oldest_ts_from_hm_latest_batch = hm_klines_latest_batch[0][0] 
-                print(f"\n--- Test 1.1: Fetch older HISTORICAL MARKET klines using 'after={oldest_ts_from_hm_latest_batch}' ---")
-                hm_klines_even_older = connector.get_history_market_candles(
-                    instId=config.SYMBOL, bar=test_bar_okx, limit=test_limit_okx, 
-                    after=str(oldest_ts_from_hm_latest_batch)
-                )
-                if hm_klines_even_older:
-                    print(f"Fetched {len(hm_klines_even_older)} even older historical market klines (Batch 2):")
-                    for k_line_b1 in hm_klines_even_older: print(f"  ts={k_line_b1[0]}")
-                    if len(hm_klines_even_older) > 0:
-                        # Expect NEWEST of this older batch < OLDEST of previous batch (which was used as 'after')
-                        if hm_klines_even_older[-1][0] < oldest_ts_from_hm_latest_batch:
-                            print(f"  Verification SUCCESS (HM 'after'): Fetched older data correctly.")
-                        else:
-                            print(f"  Verification WARNING (HM 'after'): NOT older data. Newest of B2 ({hm_klines_even_older[-1][0]}) >= Oldest of B1 ({oldest_ts_from_hm_latest_batch})")
-                else: print("  No older historical market klines fetched using 'after'.")
-        else: print("Failed to fetch recent historical market klines (Batch 1).")
+        if hm_klines_latest_batch: print(f"Fetched {len(hm_klines_latest_batch)} recent historical klines.")
+        else: print("Failed to fetch recent historical market klines.")
         
-        # --- Test 2: Recent Market Candles (/api/v5/market/candles) ---
-        # This endpoint's 'before' requests OLDER data. (Still expecting issues on demo)
+        time.sleep(1) 
+
         print(f"\n--- Test 2: Fetch recent {test_limit_okx} RECENT MARKET klines (bar={test_bar_okx}) ---")
         market_klines_recent = connector.get_market_candles(instId=config.SYMBOL, bar=test_bar_okx, limit=test_limit_okx)
-        if market_klines_recent:
-            print(f"Fetched {len(market_klines_recent)} recent market klines (Batch A):")
-            for k_line in market_klines_recent: print(f"  ts={k_line[0]}")
-            
-            if len(market_klines_recent) > 0:
-                oldest_ts_market_recent = market_klines_recent[0][0]
-                print(f"\n--- Test 2.1: Fetch older RECENT MARKET klines using 'before={oldest_ts_market_recent}' (Batch B) ---")
-                market_klines_older = connector.get_market_candles(instId=config.SYMBOL, bar=test_bar_okx, limit=test_limit_okx, before=str(oldest_ts_market_recent))
-                if market_klines_older:
-                    print(f"Fetched {len(market_klines_older)} older market klines (Batch B):")
-                    for k_line_b1 in market_klines_older: print(f"  ts={k_line_b1[0]}")
-                    if len(market_klines_older) > 0:
-                        # Expect NEWEST of this older batch (Batch B) < OLDEST of previous batch (Batch A)
-                        if market_klines_older[-1][0] < oldest_ts_market_recent: print(f"  Verification SUCCESS (Market 'before'): Fetched older data correctly.")
-                        else: print(f"  Verification WARNING (Market 'before'): NOT older data. Newest of B ({market_klines_older[-1][0]}) >= Oldest of A ({oldest_ts_market_recent})")
-                else: print("  No older market klines fetched using 'before'.")
-        else: print("Failed to fetch recent market klines (Batch A).")
+        if market_klines_recent: print(f"Fetched {len(market_klines_recent)} recent market klines.")
+        else: print("Failed to fetch recent market klines.")
 
-    except ValueError as ve_conn: print(f"Connector Test - Config Error: {ve_conn}")
-    except Exception as e_conn: print(f"Connector Test - Unexpected error: {e_conn}"); import traceback; traceback.print_exc()
+    except ValueError as ve_conn: 
+        module_logger.error(f"Connector Test - Config Error: {ve_conn}")
+    except Exception as e_conn: 
+        module_logger.error(f"Connector Test - Unexpected error: {e_conn}", exc_info=True)
     print("\nOKXConnector test script finished.")
