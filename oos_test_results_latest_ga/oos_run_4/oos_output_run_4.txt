@@ -1,0 +1,128 @@
+2025-05-14 20:04:12,818 - trading_bot - INFO - Trading Bot Initializing...
+2025-05-14 20:04:12,818 - trading_bot.okx_connector - INFO - OKX Connector initialized for DEMO TRADING.
+2025-05-14 20:04:12,843 - trading_bot.okx_connector - INFO - OKX API clients initialized (using SDK default timeouts initially). Retries handled by decorator.
+2025-05-14 20:04:12,843 - trading_bot - INFO - 
+--- Running in Mode: backtest_oos ---
+2025-05-14 20:04:12,843 - trading_bot - INFO - 
+--- Running OUT-OF-SAMPLE Backtest with Best Genes from best_genes.json ---
+2025-05-14 20:05:15,268 - trading_bot.backtester - INFO - �ز�����ʼ����ɡ���ʼ�ʽ�: 10000.00, ��������: 0.0005, ÿ�ʽ��׷���: 2.00%, ��С��λ: 0.001
+2025-05-14 20:05:15,268 - trading_bot.backtester - INFO - ��ʼ�ز�... ���ݵ�: 4000, ��ʼʱ��: 2024-05-04 12:00:00, ����ʱ��: 2024-10-18 03:00:00
+2025-05-14 20:05:15,963 - trading_bot.backtester - INFO - �ز�ѭ���������ܽ��״���: 126
+2025-05-14 20:05:16,027 - trading_bot - INFO - OOS K-line data and trades log saved.
+2025-05-14 20:05:16,027 - trading_bot - INFO - 
+Trading Bot Script Finished.
+DEBUG DataHandler: Fetching type='history_market', total_limit=9000 for BTC-USDT-SWAP (1H).
+  DEBUG DataHandler (history_market): Using 'after' for pagination. API limit: 100
+  DEBUG DataHandler (history_market): Max iterations for up to 9000 klines: 105.
+  DEBUG DataHandler (history_market): Fetching page 1/105 (Attempt 1/3) with params: {'instId': 'BTC-USDT-SWAP', 'bar': '1H', 'limit': 100}
+  DEBUG DataHandler (history_market): Fetching page 2/105 (Attempt 1/3) with params: {'instId': 'BTC-USDT-SWAP', 'bar': '1H', 'limit': 100, 'after': '1746864000000'}
+  DEBUG DataHandler (history_market): Fetching page 3/105 (Attempt 1/3) with params: {'instId': 'BTC-USDT-SWAP', 'bar': '1H', 'limit': 100, 'after': '1746504000000'}
+  DEBUG DataHandler (history_market): Fetching page 4/105 (Attempt 1/3) with params: {'instId': 'BTC-USDT-SWAP', 'bar': '1H', 'limit': 100, 'after': '1746144000000'}
+  DEBUG DataHandler (history_market): Fetching page 5/105 (Attempt 1/3) with params: {'instId': 'BTC-USDT-SWAP', 'bar': '1H', 'limit': 100, 'after': '1745784000000'}
+  DEBUG DataHandler (history_market): Fetching page 6/105 (Attempt 1/3) with params: {'instId': 'BTC-USDT-SWAP', 'bar': '1H', 'limit': 100, 'after': '1745424000000'}
+  DEBUG DataHandler (history_market): Fetching page 7/105 (Attempt 1/3) with params: {'instId': 'BTC-USDT-SWAP', 'bar': '1H', 'limit': 100, 'after': '1745064000000'}
+  DEBUG DataHandler (history_market): Fetching page 8/105 (Attempt 1/3) with params: {'instId': 'BTC-USDT-SWAP', 'bar': '1H', 'limit': 100, 'after': '1744704000000'}
+  DEBUG DataHandler (history_market): Fetching page 9/105 (Attempt 1/3) with params: {'instId': 'BTC-USDT-SWAP', 'bar': '1H', 'limit': 100, 'after': '1744344000000'}
+  DEBUG DataHandler (history_market): Fetching page 10/105 (Attempt 1/3) with params: {'instId': 'BTC-USDT-SWAP', 'bar': '1H', 'limit': 100, 'after': '1743984000000'}
+  DEBUG DataHandler (history_market): Fetching page 11/105 (Attempt 1/3) with params: {'instId': 'BTC-USDT-SWAP', 'bar': '1H', 'limit': 100, 'after': '1743624000000'}
+  DEBUG DataHandler (history_market): Fetching page 12/105 (Attempt 1/3) with params: {'instId': 'BTC-USDT-SWAP', 'bar': '1H', 'limit': 100, 'after': '1743264000000'}
+  DEBUG DataHandler (history_market): Fetching page 13/105 (Attempt 1/3) with params: {'instId': 'BTC-USDT-SWAP', 'bar': '1H', 'limit': 100, 'after': '1742904000000'}
+  DEBUG DataHandler (history_market): Fetching page 14/105 (Attempt 1/3) with params: {'instId': 'BTC-USDT-SWAP', 'bar': '1H', 'limit': 100, 'after': '1742544000000'}
+  DEBUG DataHandler (history_market): Fetching page 15/105 (Attempt 1/3) with params: {'instId': 'BTC-USDT-SWAP', 'bar': '1H', 'limit': 100, 'after': '1742184000000'}
+  DEBUG DataHandler (history_market): Fetching page 16/105 (Attempt 1/3) with params: {'instId': 'BTC-USDT-SWAP', 'bar': '1H', 'limit': 100, 'after': '1741824000000'}
+  DEBUG DataHandler (history_market): Fetching page 17/105 (Attempt 1/3) with params: {'instId': 'BTC-USDT-SWAP', 'bar': '1H', 'limit': 100, 'after': '1741464000000'}
+  DEBUG DataHandler (history_market): Fetching page 18/105 (Attempt 1/3) with params: {'instId': 'BTC-USDT-SWAP', 'bar': '1H', 'limit': 100, 'after': '1741104000000'}
+  DEBUG DataHandler (history_market): Fetching page 19/105 (Attempt 1/3) with params: {'instId': 'BTC-USDT-SWAP', 'bar': '1H', 'limit': 100, 'after': '1740744000000'}
+  DEBUG DataHandler (history_market): Fetching page 20/105 (Attempt 1/3) with params: {'instId': 'BTC-USDT-SWAP', 'bar': '1H', 'limit': 100, 'after': '1740384000000'}
+  DEBUG DataHandler (history_market): Fetching page 21/105 (Attempt 1/3) with params: {'instId': 'BTC-USDT-SWAP', 'bar': '1H', 'limit': 100, 'after': '1740024000000'}
+  DEBUG DataHandler (history_market): Fetching page 22/105 (Attempt 1/3) with params: {'instId': 'BTC-USDT-SWAP', 'bar': '1H', 'limit': 100, 'after': '1739664000000'}
+  DEBUG DataHandler (history_market): Fetching page 23/105 (Attempt 1/3) with params: {'instId': 'BTC-USDT-SWAP', 'bar': '1H', 'limit': 100, 'after': '1739304000000'}
+  DEBUG DataHandler (history_market): Fetching page 24/105 (Attempt 1/3) with params: {'instId': 'BTC-USDT-SWAP', 'bar': '1H', 'limit': 100, 'after': '1738944000000'}
+  DEBUG DataHandler (history_market): Fetching page 25/105 (Attempt 1/3) with params: {'instId': 'BTC-USDT-SWAP', 'bar': '1H', 'limit': 100, 'after': '1738584000000'}
+  DEBUG DataHandler (history_market): Fetching page 26/105 (Attempt 1/3) with params: {'instId': 'BTC-USDT-SWAP', 'bar': '1H', 'limit': 100, 'after': '1738224000000'}
+  DEBUG DataHandler (history_market): Fetching page 27/105 (Attempt 1/3) with params: {'instId': 'BTC-USDT-SWAP', 'bar': '1H', 'limit': 100, 'after': '1737864000000'}
+  DEBUG DataHandler (history_market): Fetching page 28/105 (Attempt 1/3) with params: {'instId': 'BTC-USDT-SWAP', 'bar': '1H', 'limit': 100, 'after': '1737504000000'}
+  DEBUG DataHandler (history_market): Fetching page 29/105 (Attempt 1/3) with params: {'instId': 'BTC-USDT-SWAP', 'bar': '1H', 'limit': 100, 'after': '1737144000000'}
+  DEBUG DataHandler (history_market): Fetching page 30/105 (Attempt 1/3) with params: {'instId': 'BTC-USDT-SWAP', 'bar': '1H', 'limit': 100, 'after': '1736784000000'}
+  DEBUG DataHandler (history_market): Fetching page 31/105 (Attempt 1/3) with params: {'instId': 'BTC-USDT-SWAP', 'bar': '1H', 'limit': 100, 'after': '1736424000000'}
+  DEBUG DataHandler (history_market): Fetching page 32/105 (Attempt 1/3) with params: {'instId': 'BTC-USDT-SWAP', 'bar': '1H', 'limit': 100, 'after': '1736064000000'}
+  DEBUG DataHandler (history_market): Fetching page 33/105 (Attempt 1/3) with params: {'instId': 'BTC-USDT-SWAP', 'bar': '1H', 'limit': 100, 'after': '1735704000000'}
+  DEBUG DataHandler (history_market): Fetching page 34/105 (Attempt 1/3) with params: {'instId': 'BTC-USDT-SWAP', 'bar': '1H', 'limit': 100, 'after': '1735344000000'}
+  DEBUG DataHandler (history_market): Fetching page 35/105 (Attempt 1/3) with params: {'instId': 'BTC-USDT-SWAP', 'bar': '1H', 'limit': 100, 'after': '1734984000000'}
+  DEBUG DataHandler (history_market): Fetching page 36/105 (Attempt 1/3) with params: {'instId': 'BTC-USDT-SWAP', 'bar': '1H', 'limit': 100, 'after': '1734624000000'}
+  DEBUG DataHandler (history_market): Fetching page 37/105 (Attempt 1/3) with params: {'instId': 'BTC-USDT-SWAP', 'bar': '1H', 'limit': 100, 'after': '1734264000000'}
+  DEBUG DataHandler (history_market): Fetching page 38/105 (Attempt 1/3) with params: {'instId': 'BTC-USDT-SWAP', 'bar': '1H', 'limit': 100, 'after': '1733904000000'}
+  DEBUG DataHandler (history_market): Fetching page 39/105 (Attempt 1/3) with params: {'instId': 'BTC-USDT-SWAP', 'bar': '1H', 'limit': 100, 'after': '1733544000000'}
+  DEBUG DataHandler (history_market): Fetching page 40/105 (Attempt 1/3) with params: {'instId': 'BTC-USDT-SWAP', 'bar': '1H', 'limit': 100, 'after': '1733184000000'}
+  DEBUG DataHandler (history_market): Fetching page 41/105 (Attempt 1/3) with params: {'instId': 'BTC-USDT-SWAP', 'bar': '1H', 'limit': 100, 'after': '1732824000000'}
+  DEBUG DataHandler (history_market): Fetching page 42/105 (Attempt 1/3) with params: {'instId': 'BTC-USDT-SWAP', 'bar': '1H', 'limit': 100, 'after': '1732464000000'}
+  DEBUG DataHandler (history_market): Fetching page 43/105 (Attempt 1/3) with params: {'instId': 'BTC-USDT-SWAP', 'bar': '1H', 'limit': 100, 'after': '1732104000000'}
+  DEBUG DataHandler (history_market): Fetching page 44/105 (Attempt 1/3) with params: {'instId': 'BTC-USDT-SWAP', 'bar': '1H', 'limit': 100, 'after': '1731744000000'}
+  DEBUG DataHandler (history_market): Fetching page 45/105 (Attempt 1/3) with params: {'instId': 'BTC-USDT-SWAP', 'bar': '1H', 'limit': 100, 'after': '1731384000000'}
+  DEBUG DataHandler (history_market): Fetching page 46/105 (Attempt 1/3) with params: {'instId': 'BTC-USDT-SWAP', 'bar': '1H', 'limit': 100, 'after': '1731024000000'}
+  DEBUG DataHandler (history_market): Fetching page 47/105 (Attempt 1/3) with params: {'instId': 'BTC-USDT-SWAP', 'bar': '1H', 'limit': 100, 'after': '1730664000000'}
+  DEBUG DataHandler (history_market): Fetching page 48/105 (Attempt 1/3) with params: {'instId': 'BTC-USDT-SWAP', 'bar': '1H', 'limit': 100, 'after': '1730304000000'}
+  DEBUG DataHandler (history_market): Fetching page 49/105 (Attempt 1/3) with params: {'instId': 'BTC-USDT-SWAP', 'bar': '1H', 'limit': 100, 'after': '1729944000000'}
+  DEBUG DataHandler (history_market): Fetching page 50/105 (Attempt 1/3) with params: {'instId': 'BTC-USDT-SWAP', 'bar': '1H', 'limit': 100, 'after': '1729584000000'}
+  DEBUG DataHandler (history_market): Fetching page 51/105 (Attempt 1/3) with params: {'instId': 'BTC-USDT-SWAP', 'bar': '1H', 'limit': 100, 'after': '1729224000000'}
+  DEBUG DataHandler (history_market): Fetching page 52/105 (Attempt 1/3) with params: {'instId': 'BTC-USDT-SWAP', 'bar': '1H', 'limit': 100, 'after': '1728864000000'}
+  DEBUG DataHandler (history_market): Fetching page 53/105 (Attempt 1/3) with params: {'instId': 'BTC-USDT-SWAP', 'bar': '1H', 'limit': 100, 'after': '1728504000000'}
+  DEBUG DataHandler (history_market): Fetching page 54/105 (Attempt 1/3) with params: {'instId': 'BTC-USDT-SWAP', 'bar': '1H', 'limit': 100, 'after': '1728144000000'}
+  DEBUG DataHandler (history_market): Fetching page 55/105 (Attempt 1/3) with params: {'instId': 'BTC-USDT-SWAP', 'bar': '1H', 'limit': 100, 'after': '1727784000000'}
+  DEBUG DataHandler (history_market): Fetching page 56/105 (Attempt 1/3) with params: {'instId': 'BTC-USDT-SWAP', 'bar': '1H', 'limit': 100, 'after': '1727424000000'}
+  DEBUG DataHandler (history_market): Fetching page 57/105 (Attempt 1/3) with params: {'instId': 'BTC-USDT-SWAP', 'bar': '1H', 'limit': 100, 'after': '1727064000000'}
+  DEBUG DataHandler (history_market): Fetching page 58/105 (Attempt 1/3) with params: {'instId': 'BTC-USDT-SWAP', 'bar': '1H', 'limit': 100, 'after': '1726704000000'}
+  DEBUG DataHandler (history_market): Fetching page 59/105 (Attempt 1/3) with params: {'instId': 'BTC-USDT-SWAP', 'bar': '1H', 'limit': 100, 'after': '1726344000000'}
+  DEBUG DataHandler (history_market): Fetching page 60/105 (Attempt 1/3) with params: {'instId': 'BTC-USDT-SWAP', 'bar': '1H', 'limit': 100, 'after': '1725984000000'}
+  DEBUG DataHandler (history_market): Fetching page 61/105 (Attempt 1/3) with params: {'instId': 'BTC-USDT-SWAP', 'bar': '1H', 'limit': 100, 'after': '1725624000000'}
+  DEBUG DataHandler (history_market): Fetching page 62/105 (Attempt 1/3) with params: {'instId': 'BTC-USDT-SWAP', 'bar': '1H', 'limit': 100, 'after': '1725264000000'}
+  DEBUG DataHandler (history_market): Fetching page 63/105 (Attempt 1/3) with params: {'instId': 'BTC-USDT-SWAP', 'bar': '1H', 'limit': 100, 'after': '1724904000000'}
+  DEBUG DataHandler (history_market): Fetching page 64/105 (Attempt 1/3) with params: {'instId': 'BTC-USDT-SWAP', 'bar': '1H', 'limit': 100, 'after': '1724544000000'}
+  DEBUG DataHandler (history_market): Fetching page 65/105 (Attempt 1/3) with params: {'instId': 'BTC-USDT-SWAP', 'bar': '1H', 'limit': 100, 'after': '1724184000000'}
+  DEBUG DataHandler (history_market): Fetching page 66/105 (Attempt 1/3) with params: {'instId': 'BTC-USDT-SWAP', 'bar': '1H', 'limit': 100, 'after': '1723824000000'}
+  DEBUG DataHandler (history_market): Fetching page 67/105 (Attempt 1/3) with params: {'instId': 'BTC-USDT-SWAP', 'bar': '1H', 'limit': 100, 'after': '1723464000000'}
+  DEBUG DataHandler (history_market): Fetching page 68/105 (Attempt 1/3) with params: {'instId': 'BTC-USDT-SWAP', 'bar': '1H', 'limit': 100, 'after': '1723104000000'}
+  DEBUG DataHandler (history_market): Fetching page 69/105 (Attempt 1/3) with params: {'instId': 'BTC-USDT-SWAP', 'bar': '1H', 'limit': 100, 'after': '1722744000000'}
+  DEBUG DataHandler (history_market): Fetching page 70/105 (Attempt 1/3) with params: {'instId': 'BTC-USDT-SWAP', 'bar': '1H', 'limit': 100, 'after': '1722384000000'}
+  DEBUG DataHandler (history_market): Fetching page 71/105 (Attempt 1/3) with params: {'instId': 'BTC-USDT-SWAP', 'bar': '1H', 'limit': 100, 'after': '1722024000000'}
+  DEBUG DataHandler (history_market): Fetching page 72/105 (Attempt 1/3) with params: {'instId': 'BTC-USDT-SWAP', 'bar': '1H', 'limit': 100, 'after': '1721664000000'}
+  DEBUG DataHandler (history_market): Fetching page 73/105 (Attempt 1/3) with params: {'instId': 'BTC-USDT-SWAP', 'bar': '1H', 'limit': 100, 'after': '1721304000000'}
+  DEBUG DataHandler (history_market): Fetching page 74/105 (Attempt 1/3) with params: {'instId': 'BTC-USDT-SWAP', 'bar': '1H', 'limit': 100, 'after': '1720944000000'}
+  DEBUG DataHandler (history_market): Fetching page 75/105 (Attempt 1/3) with params: {'instId': 'BTC-USDT-SWAP', 'bar': '1H', 'limit': 100, 'after': '1720584000000'}
+  DEBUG DataHandler (history_market): Fetching page 76/105 (Attempt 1/3) with params: {'instId': 'BTC-USDT-SWAP', 'bar': '1H', 'limit': 100, 'after': '1720224000000'}
+  DEBUG DataHandler (history_market): Fetching page 77/105 (Attempt 1/3) with params: {'instId': 'BTC-USDT-SWAP', 'bar': '1H', 'limit': 100, 'after': '1719864000000'}
+  DEBUG DataHandler (history_market): Fetching page 78/105 (Attempt 1/3) with params: {'instId': 'BTC-USDT-SWAP', 'bar': '1H', 'limit': 100, 'after': '1719504000000'}
+  DEBUG DataHandler (history_market): Fetching page 79/105 (Attempt 1/3) with params: {'instId': 'BTC-USDT-SWAP', 'bar': '1H', 'limit': 100, 'after': '1719144000000'}
+  DEBUG DataHandler (history_market): Fetching page 80/105 (Attempt 1/3) with params: {'instId': 'BTC-USDT-SWAP', 'bar': '1H', 'limit': 100, 'after': '1718784000000'}
+  DEBUG DataHandler (history_market): Fetching page 81/105 (Attempt 1/3) with params: {'instId': 'BTC-USDT-SWAP', 'bar': '1H', 'limit': 100, 'after': '1718424000000'}
+  DEBUG DataHandler (history_market): Fetching page 82/105 (Attempt 1/3) with params: {'instId': 'BTC-USDT-SWAP', 'bar': '1H', 'limit': 100, 'after': '1718064000000'}
+  DEBUG DataHandler (history_market): Fetching page 83/105 (Attempt 1/3) with params: {'instId': 'BTC-USDT-SWAP', 'bar': '1H', 'limit': 100, 'after': '1717704000000'}
+  DEBUG DataHandler (history_market): Fetching page 84/105 (Attempt 1/3) with params: {'instId': 'BTC-USDT-SWAP', 'bar': '1H', 'limit': 100, 'after': '1717344000000'}
+  DEBUG DataHandler (history_market): Fetching page 85/105 (Attempt 1/3) with params: {'instId': 'BTC-USDT-SWAP', 'bar': '1H', 'limit': 100, 'after': '1716984000000'}
+  DEBUG DataHandler (history_market): Fetching page 86/105 (Attempt 1/3) with params: {'instId': 'BTC-USDT-SWAP', 'bar': '1H', 'limit': 100, 'after': '1716624000000'}
+  DEBUG DataHandler (history_market): Fetching page 87/105 (Attempt 1/3) with params: {'instId': 'BTC-USDT-SWAP', 'bar': '1H', 'limit': 100, 'after': '1716264000000'}
+  DEBUG DataHandler (history_market): Fetching page 88/105 (Attempt 1/3) with params: {'instId': 'BTC-USDT-SWAP', 'bar': '1H', 'limit': 100, 'after': '1715904000000'}
+  DEBUG DataHandler (history_market): Fetching page 89/105 (Attempt 1/3) with params: {'instId': 'BTC-USDT-SWAP', 'bar': '1H', 'limit': 100, 'after': '1715544000000'}
+  DEBUG DataHandler (history_market): Fetching page 90/105 (Attempt 1/3) with params: {'instId': 'BTC-USDT-SWAP', 'bar': '1H', 'limit': 100, 'after': '1715184000000'}
+  DEBUG DataHandler (history_market): Approx 9000 unique klines. Reached target 9000. Stopping.
+DEBUG DataHandler (history_market): Final DataFrame shape: (9000, 5)
+
+--- Backtest Summary ---
+Metric                   : Value
+-----------------------------------
+Initial Capital          :   10000.00
+Final Capital            :   19207.52
+Total PnL                :    9207.52
+Total PnL Pct            :      92.08%
+Total Trades             :        126
+Winning Trades           :         52
+Losing Trades            :         74
+Win Rate                 :      41.27%
+Max Drawdown             :       9.08%
+Sharpe Ratio             :     0.2644
+Sortino Ratio            :     0.6729
+Profit Factor            :     2.6109
+Avg PnL per Trade        :      73.08
+Avg Holding Period       : 0 days 12:38:05
+Total Fees Paid          :    1329.73
+-----------------------------------
