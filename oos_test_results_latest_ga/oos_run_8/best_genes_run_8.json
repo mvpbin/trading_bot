@@ -1,0 +1,7 @@
+{
+    "short_ma_period": 5,
+    "long_ma_period": 20,
+    "atr_period": 25,
+    "atr_stop_loss_multiplier": 4.011780934355182,
+    "atr_take_profit_multiplier": 6.017671401532772
+}
